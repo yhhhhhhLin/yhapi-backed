@@ -1,0 +1,21 @@
+server:
+  port: 8081
+spring:
+  application:
+    name: yhapi-gateway
+  cloud:
+    gateway:
+      routes:
+#      路由
+        - id: api_route
+          uri: http://localhost:7600
+          predicates:
+            - Path=/api/**
+
+#开启网关日志
+logging:
+  level:
+    org:
+      springframework:
+        cloud:
+          gateway: trace

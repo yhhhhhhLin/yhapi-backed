@@ -1,0 +1,2 @@
+#将这个配置类自动加载，后面的componet也会加载了
+org.springframework.boot.autoconfigure.EnableAutoConfiguration=xyz.linyh.yhapiinterfaceclientsdk.config.YhApiClientConfig
