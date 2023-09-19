@@ -21,4 +21,6 @@
         remNum,allNum,status,
         createTime,updateTime,isDelete
     </sql>
+    <select id="getInterfaceCount" resultType="xyz.linyh.yhapi.ducommon.model.entity.UserInterfaceinfo">
+        select interfaceId,sum(allNum) as allNum from userInterfaceInfo  group by interfaceId  order by allNum desc limit #{limit}    </select>
 </mapper>

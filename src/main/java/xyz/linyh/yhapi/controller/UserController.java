@@ -1,8 +1,10 @@
 package xyz.linyh.yhapi.controller;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.plugins.pagination.PageDTO;
+import xyz.linyh.yhapi.annotation.AuthCheck;
 import xyz.linyh.yhapi.ducommon.common.BaseResponse;
 import xyz.linyh.yhapi.ducommon.common.DeleteRequest;
 import xyz.linyh.yhapi.ducommon.common.ErrorCode;
@@ -15,10 +17,12 @@ import xyz.linyh.yhapi.service.UserService;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
 import org.springframework.web.bind.annotation.*;
+import xyz.linyh.yhapi.utils.NonCollidingAccessKeyGenerator;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 /**
@@ -46,6 +50,7 @@ public class UserController {
         if (userRegisterRequest == null) {
             throw new BusinessException(ErrorCode.PARAMS_ERROR);
         }
+//        todo 添加ak和sk
         String userAccount = userRegisterRequest.getUserAccount();
         String userPassword = userRegisterRequest.getUserPassword();
         String checkPassword = userRegisterRequest.getCheckPassword();
@@ -148,13 +153,14 @@ public class UserController {
     }
 
     /**
-     * 更新用户
+     * 更新用户 （仅仅管理员）
      *
      * @param userUpdateRequest
      * @param request
      * @return
      */
     @PostMapping("/update")
+    @AuthCheck(mustRole = "admin")
     public BaseResponse<Boolean> updateUser(@RequestBody UserUpdateRequest userUpdateRequest, HttpServletRequest request) {
         if (userUpdateRequest == null || userUpdateRequest.getId() == null) {
             throw new BusinessException(ErrorCode.PARAMS_ERROR);
@@ -162,6 +168,26 @@ public class UserController {
         User user = new User();
         BeanUtils.copyProperties(userUpdateRequest, user);
         boolean result = userService.updateById(user);
+        return ResultUtils.success(result);
+    }
+
+    /**
+     *
+     普通用户修改个人信息
+     */
+    @PostMapping("/userupdate")
+    public BaseResponse<Boolean> updateUserAny(@RequestBody AnyUserUpdateRequest anyUserUpdateRequest, HttpServletRequest request) {
+        if (anyUserUpdateRequest == null || anyUserUpdateRequest.getId() == null) {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR);
+        }
+        User user = new User();
+        BeanUtils.copyProperties(anyUserUpdateRequest, user);
+        LambdaUpdateWrapper<User> wrapper = new LambdaUpdateWrapper<>();
+        wrapper.eq(User::getId,anyUserUpdateRequest.getId())
+                .set(User::getUserName,anyUserUpdateRequest.getUserName())
+                .set(User::getGender,anyUserUpdateRequest.getGender())
+                .set(User::getUserAvatar,anyUserUpdateRequest.getUserAvatar());
+        boolean result = userService.update(wrapper);
         return ResultUtils.success(result);
     }
 
@@ -181,6 +207,33 @@ public class UserController {
         UserVO userVO = new UserVO();
         BeanUtils.copyProperties(user, userVO);
         return ResultUtils.success(userVO);
+    }
+
+    /**
+     * 重置用户ak和sk
+     *
+     * @param id
+     * @param
+     * @return
+     */
+    @GetMapping("/updateak")
+    public BaseResponse updateAK(Long id) {
+        LambdaUpdateWrapper<User> wrapper = new LambdaUpdateWrapper<>();
+        if (id <= 0) {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR);
+        }
+        try {
+            Map map = NonCollidingAccessKeyGenerator.generAkAndSk();
+            LambdaUpdateWrapper<User> setWrpper = wrapper.eq(User::getId, id)
+                    .set(User::getAccessKey, map.get("accessKey"))
+                    .set(User::getSecretKey, map.get("secretKey"));
+            userService.update(setWrpper);
+            return ResultUtils.success("true");
+        } catch (Exception e) {
+            throw new BusinessException(ErrorCode.SYSTEM_ERROR);
+        }
+
+
     }
 
     /**

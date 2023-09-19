@@ -3,6 +3,7 @@ package xyz.linyh.yhapi.controller;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
+import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.google.gson.Gson;
 import xyz.linyh.yhapi.annotation.AuthCheck;
@@ -13,6 +14,7 @@ import xyz.linyh.yhapi.ducommon.common.ResultUtils;
 import xyz.linyh.yhapi.ducommon.constant.CommonConstant;
 import xyz.linyh.yhapi.ducommon.model.entity.Interfaceinfo;
 import xyz.linyh.yhapi.ducommon.model.entity.User;
+import xyz.linyh.yhapi.ducommon.model.entity.UserInterfaceinfo;
 import xyz.linyh.yhapi.exception.BusinessException;
 import xyz.linyh.yhapi.model.dto.interfaceInfo.*;
 import xyz.linyh.yhapi.service.InterfaceinfoService;
@@ -21,6 +23,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
 import org.springframework.web.bind.annotation.*;
+import xyz.linyh.yhapi.service.UserinterfaceinfoService;
 import xyz.linyh.yhapiinterfaceclientsdk.client.TestClient;
 
 import javax.annotation.Resource;
@@ -39,6 +42,9 @@ public class InterceptorInfoController {
 
     @Resource
     private InterfaceinfoService interfaceinfoService;
+
+    @Resource
+    private UserinterfaceinfoService userinterfaceinfoService;
 
     @Resource
     private UserService userService;
@@ -217,9 +223,15 @@ public class InterceptorInfoController {
             throw new BusinessException(ErrorCode.NOT_FOUND_ERROR);
         }
 
-        User userId = userService.getLoginUser(request);
+        User user = userService.getLoginUser(request);
+
+//        判断是否还有调用次数
+        Boolean isInvoke = userinterfaceinfoService.isInvoke(interfaceInfoInvokeRequest.getId(), user.getId());
+        if(!isInvoke){
+            throw new BusinessException(ErrorCode.NOT_INVOKE_NUM_ERROR);
+        }
+
 //        获取用户的ak和sk
-        User user = userService.getById(userId);
         String accessKey = user.getAccessKey();
         String secretKey = user.getSecretKey();
 
@@ -231,6 +243,7 @@ public class InterceptorInfoController {
 
 
 //        通过sdk发送请求 todo 现在只是固定的
+//        直接发送到网关,网关判断要转发要哪个地址
         TestClient testClient = new TestClient(accessKey, secretKey);
         String resp = testClient.testGet((String) testUser.get("name"));
 

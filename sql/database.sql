@@ -15,37 +15,45 @@ create table if not exists user
         unique (userAccount)
 ) comment '用户';
 
-create table interfaceInfo
+create table yhapi.interfaceInfo
 (
-    id             bigint                               not null comment '接口id'
-        primary key
-        unique,
-    name           varchar(255)                         not null comment '接口名称',
-    isDelete       tinyint  default 0                   not null comment '是否删除 0为没删除 1为删除',
-    createTime     datetime default current_timestamp() not null comment '创建时间',
-    updateTime     datetime default current_timestamp   not null comment '更新时间',
-    method         varchar(255)                         not null comment '请求方法',
-    description    varchar(255)                         null comment '接口描述',
-    url            varchar(255)                         not null comment '接口地址',
-    requestHeader  text                                 null comment '请求头',
-    responseHeader text                                 null comment '响应信息',
-    status         tinyint  default 0                   null comment '接口状态 0为可用 1为不可用',
-    userId         long                                 null comment '接口创建者id'
+    id               bigint auto_increment comment '接口id'
+        primary key,
+    name             varchar(255)                       not null comment '接口名称',
+    method           varchar(255)                       not null comment '请求方法',
+    description      varchar(255)                       null comment '接口描述',
+    url              varchar(255)                       not null comment '接口地址',
+    requestHeader    text                               null comment '请求头',
+    responseHeader   text                               null comment '响应信息',
+    status           tinyint  default 1                 null comment '接口状态 1为可用 0为不可用',
+    userId           bigint                             null comment '接口创建者id',
+    isDelete         tinyint  default 0                 not null comment '是否删除 0为没删除 1为删除',
+    createTime       datetime default CURRENT_TIMESTAMP not null comment '创建时间',
+    updateTime       datetime default CURRENT_TIMESTAMP not null comment '更新时间',
+    requestParams    text                               null comment '请求体参数',
+    getRequestParams text                               null comment 'get请求参数',
+    constraint id
+        unique (id)
 )
     comment '接口信息表';
 
-create table userInterfaceInfo
+
+
+create table yhapi.userInterfaceinfo
 (
-    id             bigint                               not null comment 'id'
-        primary key
-        unique,
-    userId           bigint                             not null comment '用户id',
-    interfaceId      bigint                             not null comment '接口id',
-    remNum           int default 10                     not null comment '剩余调用次数',
-    allNum           int default 0                      not null comment '共调用多少次',
-    status         tinyint  default 0                   null comment '用户是否能调用这个接口 0为可用 1为不可用',
-    createTime   datetime     default CURRENT_TIMESTAMP not null comment '创建时间',
-    updateTime   datetime     default CURRENT_TIMESTAMP not null on update CURRENT_TIMESTAMP comment '更新时间',
-    isDelete     tinyint      default 0                 not null comment '是否删除'
+    id          bigint auto_increment comment 'id'
+        primary key,
+    userId      bigint                             not null comment '用户id',
+    interfaceId bigint                             not null comment '接口id',
+    remNum      int      default 10                not null comment '剩余调用次数',
+    allNum      int      default 0                 not null comment '共调用多少次',
+    status      tinyint  default 1                 null comment '用户是否能调用这个接口 1为可用 0为不可用',
+    createTime  datetime default CURRENT_TIMESTAMP not null comment '创建时间',
+    updateTime  datetime default CURRENT_TIMESTAMP not null on update CURRENT_TIMESTAMP comment '更新时间',
+    isDelete    tinyint  default 0                 not null comment '是否删除',
+    constraint id
+        unique (id)
 )
     comment '用户接口调用次数关系表';
+
+

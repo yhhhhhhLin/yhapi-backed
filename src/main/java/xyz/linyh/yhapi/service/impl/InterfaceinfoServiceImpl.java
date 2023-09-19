@@ -58,7 +58,7 @@ public class InterfaceinfoServiceImpl extends ServiceImpl<InterfaceinfoMapper, I
     }
 
     @Override
-    public Boolean getInterfaceInfoByURL(String interfaceURL,String method) {
+    public Interfaceinfo getInterfaceInfoByURL(String interfaceURL,String method) {
         if(interfaceURL==null || method==null){
             throw new BusinessException(ErrorCode.PARAMS_ERROR);
         }
@@ -66,10 +66,7 @@ public class InterfaceinfoServiceImpl extends ServiceImpl<InterfaceinfoMapper, I
                 .eq(Interfaceinfo::getUrl, interfaceURL)
                 .eq(Interfaceinfo::getMethod,method)
         );
-        if(interfaceinfo==null){
-            return false;
-        }
-        return true;
+        return interfaceinfo;
     }
 }
 
