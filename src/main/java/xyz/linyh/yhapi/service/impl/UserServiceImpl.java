@@ -4,8 +4,8 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import xyz.linyh.yhapi.ducommon.common.ErrorCode;
+import xyz.linyh.yhapi.ducommon.exception.BusinessException;
 import xyz.linyh.yhapi.ducommon.model.entity.User;
-import xyz.linyh.yhapi.exception.BusinessException;
 import xyz.linyh.yhapi.mapper.UserMapper;
 
 import xyz.linyh.yhapi.service.UserService;

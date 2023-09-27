@@ -6,16 +6,18 @@ import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.google.gson.Gson;
+import xyz.linyh.yapiclientsdk.client.ApiClient;
 import xyz.linyh.yhapi.annotation.AuthCheck;
 import xyz.linyh.yhapi.ducommon.common.BaseResponse;
 import xyz.linyh.yhapi.ducommon.common.DeleteRequest;
 import xyz.linyh.yhapi.ducommon.common.ErrorCode;
 import xyz.linyh.yhapi.ducommon.common.ResultUtils;
 import xyz.linyh.yhapi.ducommon.constant.CommonConstant;
+import xyz.linyh.yhapi.ducommon.exception.BusinessException;
 import xyz.linyh.yhapi.ducommon.model.entity.Interfaceinfo;
 import xyz.linyh.yhapi.ducommon.model.entity.User;
 import xyz.linyh.yhapi.ducommon.model.entity.UserInterfaceinfo;
-import xyz.linyh.yhapi.exception.BusinessException;
+import xyz.linyh.yhapi.ducommon.requestParms.InterfaceParams;
 import xyz.linyh.yhapi.model.dto.interfaceInfo.*;
 import xyz.linyh.yhapi.service.InterfaceinfoService;
 import xyz.linyh.yhapi.service.UserService;
@@ -24,10 +26,11 @@ import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
 import org.springframework.web.bind.annotation.*;
 import xyz.linyh.yhapi.service.UserinterfaceinfoService;
-import xyz.linyh.yhapiinterfaceclientsdk.client.TestClient;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
+import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -140,7 +143,7 @@ public class InterceptorInfoController {
 
 //    接口上线
     @PostMapping("/online")
-    public BaseResponse online(@RequestBody IdRequest idRequest,
+    public BaseResponse onlineInterfaceInfo(@RequestBody IdRequest idRequest,
                           HttpServletRequest request){
         if (idRequest == null || idRequest.getId() <= 0) {
             throw new BusinessException(ErrorCode.PARAMS_ERROR);
@@ -166,7 +169,7 @@ public class InterceptorInfoController {
 
 //    接口下线
     @PostMapping("/offline")
-    public BaseResponse offline(@RequestBody IdRequest idRequest,
+    public BaseResponse offlineInterfaceInfo(@RequestBody IdRequest idRequest,
                           HttpServletRequest request){
         if (idRequest == null || idRequest.getId() <= 0) {
             throw new BusinessException(ErrorCode.PARAMS_ERROR);
@@ -202,6 +205,8 @@ public class InterceptorInfoController {
             throw new BusinessException(ErrorCode.PARAMS_ERROR);
         }
         Interfaceinfo interfaceInfo = interfaceinfoService.getById(id);
+//        过敏
+        interfaceInfo.setHost("");
         return ResultUtils.success(interfaceInfo);
     }
 
@@ -216,11 +221,11 @@ public class InterceptorInfoController {
         if(interfaceInfoInvokeRequest==null ||interfaceInfoInvokeRequest.getId()==null ||interfaceInfoInvokeRequest.getId()<=0){
             throw new BusinessException(ErrorCode.PARAMS_ERROR);
         }
-//        int i = 10/0;
+
 //        判断接口是否有效
         Interfaceinfo interfaceInfo = interfaceinfoService.getById(interfaceInfoInvokeRequest.getId());
         if(interfaceInfo==null){
-            throw new BusinessException(ErrorCode.NOT_FOUND_ERROR);
+            throw new BusinessException(ErrorCode.NOT_FOUND_ERROR,"不存在这个接口");
         }
 
         User user = userService.getLoginUser(request);
@@ -228,7 +233,7 @@ public class InterceptorInfoController {
 //        判断是否还有调用次数
         Boolean isInvoke = userinterfaceinfoService.isInvoke(interfaceInfoInvokeRequest.getId(), user.getId());
         if(!isInvoke){
-            throw new BusinessException(ErrorCode.NOT_INVOKE_NUM_ERROR);
+            throw new BusinessException(ErrorCode.NOT_INVOKE_NUM_ERROR,"没有调用次数");
         }
 
 //        获取用户的ak和sk
@@ -236,18 +241,43 @@ public class InterceptorInfoController {
         String secretKey = user.getSecretKey();
 
 
-        Gson gson = new Gson();
-        Map<String, Object> testUser = gson.fromJson(interfaceInfoInvokeRequest.getRequestParams(), Map.class);
+//        添加请求参数 并发送请求到网关
+        ApiClient apiClient = new ApiClient(accessKey, secretKey);
+        String response =null;
 
-//      todo  如果请求体为空，也需要判断
+//        请求参数
+        List<GRequestParamsDto> getRequestParams = interfaceInfoInvokeRequest.getGetRequestParams();
+//        请求体参数
+        String requestParams = interfaceInfoInvokeRequest.getRequestParams();
+//        如果没有请求参数，那么直接用简单的方式发送请求
+        if((getRequestParams==null && requestParams==null) ||(requestParams==null && getRequestParams.size()==0)){
 
+           response = apiClient.request(interfaceInfo.getUri(), interfaceInfo.getMethod());
+        }else{
 
-//        通过sdk发送请求 todo 现在只是固定的
-//        直接发送到网关,网关判断要转发要哪个地址
-        TestClient testClient = new TestClient(accessKey, secretKey);
-        String resp = testClient.testGet((String) testUser.get("name"));
+            InterfaceParams interfaceParams = new InterfaceParams();
+            if(getRequestParams!=null && getRequestParams.size()>0){
+                HashMap<String, Object> params = new HashMap<>();
+                for(GRequestParamsDto dto:getRequestParams){
+                    params.put(dto.getRequestParmK(),dto.getRequestParmV());
+                }
+                interfaceParams.setRequestParams(params);
+            }
 
-        return resp;
+            if(requestParams!=null){
+                Gson gson = new Gson();
+                Map<String, Object> bodyParams = gson.fromJson(interfaceInfoInvokeRequest.getRequestParams(), Map.class);
+                interfaceParams.setRequestBody(bodyParams);
+            }
+            interfaceParams.setRequestMethod(interfaceInfo.getMethod());
+//            发送请求 添加请求头 todo
+            response = apiClient.request(interfaceInfo.getUri(),interfaceParams);
+        }
+
+//        对响应进行处理
+        System.out.println(response);
+
+        return response;
     }
 
     /**

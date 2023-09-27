@@ -7,6 +7,7 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 import xyz.linyh.yhapi.ducommon.common.BaseResponse;
 import xyz.linyh.yhapi.ducommon.common.ErrorCode;
 import xyz.linyh.yhapi.ducommon.common.ResultUtils;
+import xyz.linyh.yhapi.ducommon.exception.BusinessException;
 
 /**
  * 全局异常处理器

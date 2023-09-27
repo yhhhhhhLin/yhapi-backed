@@ -3,14 +3,24 @@ server:
 spring:
   application:
     name: yhapi-gateway
+  redis:
+    port: 6379
+    host: localhost
+    database: 0
   cloud:
     gateway:
       routes:
 #      路由
         - id: api_route
+#          uri:
+#          uri: http://101.37.167.58:7600
           uri: http://localhost:7600
           predicates:
-            - Path=/api/**
+            - Path=/interface/**
+#          把前缀去掉
+          filters:
+            - StripPrefix= 1
+
 
 #开启网关日志
 logging:
@@ -19,3 +29,22 @@ logging:
       springframework:
         cloud:
           gateway: trace
+dubbo:
+  application:
+    name: dubbo-springboot-demo-consumer
+    qos-port: 33333
+    qos-enable: false
+    qos-accept-foreign-ip: false
+  protocol:
+    name: dubbo
+    port: -1
+  registry:
+    id: nacos-registry
+#    address: nacos://localhost:8848
+#    address: nacos://101.37.167.58:8848?username=nacos&password=nacos
+    address: nacos://localhost:8848?username=nacos&password=nacos
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://localhost:3306/yhapi
+    username: root
+    password: abc8909389

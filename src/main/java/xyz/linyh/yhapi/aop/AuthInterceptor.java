@@ -12,9 +12,9 @@ import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 import xyz.linyh.yhapi.annotation.AuthCheck;
 import xyz.linyh.yhapi.ducommon.common.ErrorCode;
+import xyz.linyh.yhapi.ducommon.exception.BusinessException;
 import xyz.linyh.yhapi.ducommon.model.entity.User;
 import xyz.linyh.yhapi.ducommon.model.enums.UserRoleEnum;
-import xyz.linyh.yhapi.exception.BusinessException;
 import xyz.linyh.yhapi.service.UserService;
 
 /**

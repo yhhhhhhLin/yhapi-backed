@@ -6,8 +6,8 @@ import org.apache.commons.lang3.StringUtils;
 import xyz.linyh.yhapi.ducommon.common.BaseResponse;
 import xyz.linyh.yhapi.ducommon.common.ErrorCode;
 import xyz.linyh.yhapi.ducommon.common.ResultUtils;
+import xyz.linyh.yhapi.ducommon.exception.BusinessException;
 import xyz.linyh.yhapi.ducommon.model.entity.Interfaceinfo;
-import xyz.linyh.yhapi.exception.BusinessException;
 import xyz.linyh.yhapi.service.InterfaceinfoService;
 import xyz.linyh.yhapi.mapper.InterfaceinfoMapper;
 import org.springframework.stereotype.Service;
@@ -37,14 +37,14 @@ public class InterfaceinfoServiceImpl extends ServiceImpl<InterfaceinfoMapper, I
         String name = interfaceInfo.getName();
         String method = interfaceInfo.getMethod();
         String description = interfaceInfo.getDescription();
-        String url = interfaceInfo.getUrl();
+        String uri = interfaceInfo.getUri();
         String requestHeader = interfaceInfo.getRequestHeader();
         String responseHeader = interfaceInfo.getResponseHeader();
         Integer status = interfaceInfo.getStatus();
 
         // 创建时，所有参数必须非空
         if (add) {
-            if (StringUtils.isAnyBlank(name, method, description, url, requestHeader,responseHeader)) {
+            if (StringUtils.isAnyBlank(name, method, description, uri, requestHeader,responseHeader)) {
                 throw new BusinessException(ErrorCode.PARAMS_ERROR);
             }
         }
@@ -58,12 +58,12 @@ public class InterfaceinfoServiceImpl extends ServiceImpl<InterfaceinfoMapper, I
     }
 
     @Override
-    public Interfaceinfo getInterfaceInfoByURL(String interfaceURL,String method) {
-        if(interfaceURL==null || method==null){
+    public Interfaceinfo getInterfaceInfoByURI(String interfaceURI,String method) {
+        if(interfaceURI==null || method==null){
             throw new BusinessException(ErrorCode.PARAMS_ERROR);
         }
         Interfaceinfo interfaceinfo = this.getOne(Wrappers.<Interfaceinfo>lambdaQuery()
-                .eq(Interfaceinfo::getUrl, interfaceURL)
+                .eq(Interfaceinfo::getUri, interfaceURI)
                 .eq(Interfaceinfo::getMethod,method)
         );
         return interfaceinfo;

@@ -37,7 +37,7 @@ mybatis-plus:
 yhapi:
   client:
     access-key: testak
-    secret-key: testak
+    secret-key: testsk
 dubbo:
   application:
     name: dubbo-springboot-demo-provider

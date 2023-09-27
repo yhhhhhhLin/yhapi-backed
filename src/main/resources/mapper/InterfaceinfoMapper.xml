@@ -12,7 +12,8 @@
             <result property="updateTime" column="updateTime" jdbcType="TIMESTAMP"/>
             <result property="method" column="method" jdbcType="VARCHAR"/>
             <result property="description" column="description" jdbcType="VARCHAR"/>
-            <result property="url" column="url" jdbcType="VARCHAR"/>
+            <result property="uri" column="uri" jdbcType="VARCHAR"/>
+            <result property="host" column="host" jdbcType="VARCHAR"/>
             <result property="requestHeader" column="requestHeader" jdbcType="VARCHAR"/>
             <result property="responseHeader" column="responseHeader" jdbcType="VARCHAR"/>
             <result property="requestParams" column="requestParams" jdbcType="LONGVARCHAR"/>

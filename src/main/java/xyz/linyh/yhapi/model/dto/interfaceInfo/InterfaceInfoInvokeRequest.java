@@ -22,9 +22,10 @@ public class InterfaceInfoInvokeRequest implements Serializable {
 
 
     /**
-     * 请求参数
+     * 请求体参数参数
      */
     private String requestParams;
+
 
     /**
      * get请求参数

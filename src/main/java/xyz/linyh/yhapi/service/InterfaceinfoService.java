@@ -18,5 +18,5 @@ public interface InterfaceinfoService extends IService<Interfaceinfo> {
      */
     void validInterfaceInfo(Interfaceinfo interfaceInfo, boolean add);
 
-    Interfaceinfo getInterfaceInfoByURL(String interfaceURL,String method);
+    Interfaceinfo getInterfaceInfoByURI(String interfaceURI,String method);
 }

@@ -61,7 +61,7 @@ public class TestClient {
     }
 
     private Map getHeader(String sign,String timeS) {
-        HashMap<String, String> headers = new HashMap<>();
+        HashMap<String, String> headers = new HashMap<String, String>();
         headers.put("accessKey",accessKey);
 //        headers.put("secretKey",secretKey);
         headers.put("sign",sign);
@@ -73,7 +73,7 @@ public class TestClient {
     }
 
     public String testPost(String name){
-        HashMap<String, Object> paramMap = new HashMap<>();
+        HashMap<String, Object> paramMap = new HashMap<String, Object>();
         paramMap.put("name", name);
 
         String result= HttpUtil.post("http://localhost:7600/test_i/p", paramMap);

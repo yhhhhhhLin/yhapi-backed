@@ -48,9 +48,14 @@ public class InterfaceInfoUpdateRequest implements Serializable {
     private String description;
 
     /**
-     * 接口地址
+     * 接口uri
      */
-    private String url;
+    private String uri;
+
+    /**
+     * 接口host
+     */
+    private String host;
 
     /**
      * 请求头

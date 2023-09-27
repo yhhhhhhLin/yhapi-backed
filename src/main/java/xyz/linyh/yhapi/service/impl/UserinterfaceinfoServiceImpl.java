@@ -12,11 +12,11 @@ import xyz.linyh.yhapi.ducommon.common.BaseResponse;
 import xyz.linyh.yhapi.ducommon.common.ErrorCode;
 import xyz.linyh.yhapi.ducommon.common.ResultUtils;
 import xyz.linyh.yhapi.ducommon.constant.UserInterfaceInfoConstant;
+import xyz.linyh.yhapi.ducommon.exception.BusinessException;
 import xyz.linyh.yhapi.ducommon.model.entity.Interfaceinfo;
 import xyz.linyh.yhapi.ducommon.model.entity.UserInterfaceinfo;
 
 import xyz.linyh.yhapi.ducommon.model.vo.InterfaceInfoVO;
-import xyz.linyh.yhapi.exception.BusinessException;
 import xyz.linyh.yhapi.mapper.UserinterfaceinfoMapper;
 import xyz.linyh.yhapi.service.InterfaceinfoService;
 import xyz.linyh.yhapi.service.UserinterfaceinfoService;

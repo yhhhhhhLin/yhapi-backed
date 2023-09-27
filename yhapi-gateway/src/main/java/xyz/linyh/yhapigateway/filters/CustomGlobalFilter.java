@@ -5,10 +5,14 @@ import cn.hutool.core.date.DateUtil;
 import cn.hutool.core.util.StrUtil;
 import com.google.common.base.Joiner;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.dubbo.config.annotation.DubboReference;
 import org.reactivestreams.Publisher;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cloud.gateway.filter.GatewayFilterChain;
 import org.springframework.cloud.gateway.filter.GlobalFilter;
+import org.springframework.cloud.gateway.route.Route;
 import org.springframework.core.Ordered;
+import org.springframework.core.annotation.Order;
 import org.springframework.core.io.buffer.DataBuffer;
 import org.springframework.core.io.buffer.DataBufferFactory;
 import org.springframework.core.io.buffer.DataBufferUtils;
@@ -21,18 +25,41 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+import xyz.linyh.yhapigateway.utils.RedissonLockUtil;
+import xyz.linyh.yhapi.ducommon.common.ErrorCode;
+import xyz.linyh.yhapi.ducommon.exception.BusinessException;
+import xyz.linyh.yhapi.ducommon.model.entity.Interfaceinfo;
+import xyz.linyh.yhapi.ducommon.model.entity.User;
+import xyz.linyh.yhapi.ducommon.service.DubboInterfaceinfoService;
+import xyz.linyh.yhapi.ducommon.service.DubboUserService;
+import xyz.linyh.yhapi.ducommon.service.DubboUserinterfaceinfoService;
 import xyz.linyh.yhapiinterfaceclientsdk.utils.MyDigestUtils;
 
 
 import java.nio.charset.Charset;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
+import static org.springframework.cloud.gateway.support.ServerWebExchangeUtils.GATEWAY_ROUTE_ATTR;
 import static org.springframework.cloud.gateway.support.ServerWebExchangeUtils.ORIGINAL_RESPONSE_CONTENT_TYPE_ATTR;
 
+/**
+ * @author lin
+ */
 @Slf4j
+@Order(Ordered.LOWEST_PRECEDENCE)
 @Component
 public class CustomGlobalFilter implements GlobalFilter, Ordered {
+
+    @DubboReference
+    private DubboUserinterfaceinfoService dubboUserinterfaceinfoService;
+
+    @DubboReference
+    private DubboInterfaceinfoService dubboInterfaceinfoService;
+
+    // todo 不能用固定的
+//    public static final String INTERFACE_PRE = "http://101.37.167.58:7600";
 
     @Override
     public Mono<Void> filter(ServerWebExchange exchange, GatewayFilterChain chain) {
@@ -41,8 +68,17 @@ public class CustomGlobalFilter implements GlobalFilter, Ordered {
 
 //        3. 统一日志
         ServerHttpRequest request = exchange.getRequest();
-        System.out.println(request.getPath());
-        log.info("请求地址:{}",request.getPath());
+        /**
+         * todo 网关启动的时候，从数据库获取所有interfaceinfo信息,维护到内存hashmap中，获取到所有要转发到的地址，然后根据方法的path获取到这个方法要转发到哪个服务，不可以直接在yml中写死要转发的地址
+         */
+        HttpHeaders headers = request.getHeaders();
+        String uri = headers.getFirst("uri");
+
+//        String path = request.getPath().value()+uri;
+        String path = request.getPath().value();
+        String method = request.getMethod().toString();
+
+        log.info("请求地址:{}",path);
         log.info("请求参数:{}",request.getQueryParams());
         log.info("请求方法:{}",request.getMethod());
         log.info("请求用户地址:{}",request.getRemoteAddress());
@@ -51,7 +87,6 @@ public class CustomGlobalFilter implements GlobalFilter, Ordered {
 //        4. todo 设置请求黑白名单
 
 //        5. 统一鉴权
-        HttpHeaders headers = request.getHeaders();
         String sign = headers.getFirst("sign");
         String timeS = headers.getFirst("timeS");
         String accessKey = headers.getFirst("accessKey");
@@ -61,26 +96,104 @@ public class CustomGlobalFilter implements GlobalFilter, Ordered {
             response.setStatusCode(HttpStatus.FORBIDDEN);
             return response.setComplete();
         }
+
+        User user = null;
+        try {
+            user = dubboUserService.getUserByAk(accessKey);
+        } catch (Exception e) {
+            throw new RuntimeException("gateway获取用户失败");
+        }
+        if(user == null){
+            throw new RuntimeException("gateway获取用户失败");
+        }
         try {
 //            api签名认证
-            signAuth(sign,timeS,accessKey);
+            signAuth(sign,timeS,user);
         } catch (Exception e) {
             response.setStatusCode(HttpStatus.FORBIDDEN);
             log.info("签名认证失败");
             return response.setComplete();
         }
+
+//        获取所有接口
+        HashMap<String, String> URIAndHost = new HashMap<>();
+        List<Interfaceinfo> interfaceinfos = null;
+
+
+        interfaceinfos = dubboInterfaceinfoService.getAllInterface();
+        if(interfaceinfos==null) {
+            throw new BusinessException(ErrorCode.SYSTEM_ERROR);
+        }
+
+
+//        全部添加到hashmap中
+        interfaceinfos.forEach(interfaceinfo->{
+            URIAndHost.put(interfaceinfo.getUri(),interfaceinfo.getHost());
+        });
+
 //        6. 判断请求接口是否存在
-//        todo 根据url获取去数据库判断接口是否存在 可以直接用远程调用backed项目的接口
+//        String host = URIAndHost.get(uri);
+//        if(host==null){
+//            throw new BusinessException(ErrorCode.PARAMS_ERROR);
+//        }
+
+//        Long interfaceId =getInterfaceId(interfaceinfos,uri);
+        Interfaceinfo interfaceinfo = null;
+        for(int i = 0;i<interfaceinfos.size();i++){
+            if(uri!=null && uri.equals(interfaceinfos.get(i).getUri())){
+                interfaceinfo = interfaceinfos.get(i);
+            }
+        }
+        if(interfaceinfo == null){
+            throw new BusinessException(ErrorCode.PARAMS_ERROR,"无法获取接口");
+        }
+
+
+//        路由地址
+        Route route = exchange.getAttribute(GATEWAY_ROUTE_ATTR);
+        System.out.println(route);
+
+//        跳转到特定的地址 todo
+//        log.info(String.valueOf(URI.create(host + uri)));
+//        exchange = exchange.mutate()
+//                .request(exchange.getRequest().mutate().uri(URI.create(host + uri)).build())
+//                .build();
+
+
+
+//         todo 判断是否还有调用次数 因为可以直接通过sdk调用方法，可以绕过前面的backed
+
+
 
 //        7. 转发到对应的接口
         Mono<Void> filter = chain.filter(exchange);
-        return handleResponse(exchange,chain);
+
+        return handleResponse(exchange,chain,interfaceinfo,user);
 //        这个是异步的方法，需要全部过滤都结束才会转发到对应的服务上 所以无法通过filter来获取响应结果
 
 //        return filter;
     }
 
+    /**
+     * 根据uri获取interfaceId
+     * @param interfaceinfos
+     * @param uri
+     * @return
+     */
+    private Long getInterfaceId(List<Interfaceinfo> interfaceinfos, String uri) {
 
+
+        for(int i = 0;i<interfaceinfos.size();i++){
+            if(interfaceinfos.get(i).getUri().equals(uri)){
+                return interfaceinfos.get(i).getId();
+            }
+        }
+        return null;
+    }
+
+
+    @Autowired
+    private RedissonLockUtil redissonLockUtil;
     private static Joiner joiner = Joiner.on("");
     /**
      * 处理异步发送请求无法获取响应值
@@ -88,7 +201,7 @@ public class CustomGlobalFilter implements GlobalFilter, Ordered {
      * @param chain
      * @return
      */
-    public Mono<Void> handleResponse(ServerWebExchange exchange, GatewayFilterChain chain) {
+    public Mono<Void> handleResponse(ServerWebExchange exchange, GatewayFilterChain chain,Interfaceinfo interfaceinfo,User user) {
         ServerHttpResponse originalResponse = exchange.getResponse();
         // 保存数据的工厂
         DataBufferFactory bufferFactory = originalResponse.bufferFactory();
@@ -117,10 +230,21 @@ public class CustomGlobalFilter implements GlobalFilter, Ordered {
                                 }
                             });
                             String responseData = joiner.join(list);
-//                           todo 请求成功 调用次数修改 (利用远程调用修改)
-//                            8. todo 响应日志
 
-//                            9. todo 次数统计
+//                            8. 响应日志
+                            log.info("调用成功次数加1");
+
+//                            9. 次数++(加锁)
+                            try {
+//                                redis分布式锁上锁
+                                redissonLockUtil.redissonDistributedLocks(("gateway_" + user.getUserAccount()).intern(), () -> {
+                                    dubboUserinterfaceinfoService.invokeOk(interfaceinfo.getId(), user.getId());
+                                }, "接口调用失败");
+//                                dubboUserinterfaceinfoService.invokeOk(interfaceInfoId,userId);
+                            } catch (Exception e) {
+                                throw new RuntimeException("gateway调用次数修改失败");
+                            }
+
                             System.out.println("responseData："+responseData);
 
 
@@ -141,16 +265,22 @@ public class CustomGlobalFilter implements GlobalFilter, Ordered {
         return chain.filter(exchange.mutate().response(response).build());
     }
 
+    @DubboReference
+    private DubboUserService dubboUserService;
+
     /**
      * api签名认证
      * @param sign
      * @param timeS
-     * @param ak
+     * @param user
      * @return
      */
-    Boolean signAuth(String sign,String timeS,String ak){
-//        todo 从根据accessKey从数据库获取secretKet 可以直接用远程调用backed项目的接口
-        String secretKey = "testsk";
+    Boolean signAuth(String sign,String timeS,User user){
+
+        if(user==null){
+            throw new RuntimeException(ErrorCode.NO_AUTH_ERROR.getMessage());
+        }
+        String secretKey = user.getSecretKey();
 //        通过加密算法加密生成然后和sign比较
 //        认证生成签名
         if(!sign.equals(MyDigestUtils.getDigest(secretKey))){
