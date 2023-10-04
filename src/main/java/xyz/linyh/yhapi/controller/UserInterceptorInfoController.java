@@ -16,6 +16,7 @@ import xyz.linyh.yhapi.ducommon.constant.CommonConstant;
 import xyz.linyh.yhapi.ducommon.exception.BusinessException;
 import xyz.linyh.yhapi.ducommon.model.entity.User;
 import xyz.linyh.yhapi.ducommon.model.entity.UserInterfaceinfo;
+import xyz.linyh.yhapi.ducommon.model.vo.InterfaceInfoVO;
 import xyz.linyh.yhapi.model.dto.interfaceInfo.InterfaceInfoQueryRequest;
 import xyz.linyh.yhapi.model.dto.interfaceInfo.InterfaceInfoUpdateRequest;
 import xyz.linyh.yhapi.model.dto.userInterfaceInfo.UserInterfaceInfoAddRequest;
@@ -204,5 +205,18 @@ public class UserInterceptorInfoController {
     }
 
     // endregion
+
+    /**
+     * 获取一个接口的详细信息，包括调用次数
+     * @return
+     */
+    @GetMapping("/detail")
+    public BaseResponse<InterfaceInfoVO> getInterfaceAllDataByInterfaceId(HttpServletRequest request, Long interfaceId){
+        if(interfaceId==null){
+            return ResultUtils.error(ErrorCode.PARAMS_ERROR,"接口id不能为空");
+        }
+
+       return userInterfaceinfoService.getInterfaceAllDataByInterfaceId(interfaceId);
+    }
 
 }

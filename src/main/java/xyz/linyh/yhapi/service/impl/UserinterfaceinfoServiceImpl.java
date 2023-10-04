@@ -134,7 +134,7 @@ public class UserinterfaceinfoServiceImpl extends ServiceImpl<UserinterfaceinfoM
     }
 
     /**
-     * 获取所有接口的调用次数
+     * 获取所有接口的调用次数前5的数据
      *
      * @return
      */
@@ -166,6 +166,46 @@ public class UserinterfaceinfoServiceImpl extends ServiceImpl<UserinterfaceinfoM
         List<InterfaceInfoVO> orderInterfaceInfoVOS = interfaceInfoVOS.stream().sorted(Comparator.comparing(InterfaceInfoVO::getAllNum).reversed()).collect(Collectors.toList());
 
         return ResultUtils.success(orderInterfaceInfoVOS);
+    }
+
+    /**
+     * 获取用户自己接口的调用次数前5的数据
+     * @param id
+     * @return
+     */
+    @Override
+    public BaseResponse<List<InterfaceInfoVO>> analyzeSelfInterfaceInfo(Long id) {
+//        获取每一个接口对应的总调用次数
+        List<UserInterfaceinfo> interfaceCount = userinterfaceinfoMapper.getSelfInterfaceCount(5,id);
+        if(interfaceCount==null || interfaceCount.size()==0){
+            ResultUtils.success("无数据");
+        }
+
+//        根据interfaceinfoId一个一个去查对应的接口详细信息
+        List<InterfaceInfoVO> orderInterfaceInfoVOS = interfaceCount.stream().map(userInterfaceInfo  -> {
+
+            InterfaceInfoVO interfaceInfoVO = new InterfaceInfoVO();
+            BeanUtils.copyProperties(userInterfaceInfo, interfaceInfoVO);
+            Long interfaceId = userInterfaceInfo.getInterfaceId();
+            Interfaceinfo interfaceinfo = interfaceinfoService.getById(interfaceId);
+            BeanUtils.copyProperties(interfaceinfo,interfaceInfoVO);
+
+            return interfaceInfoVO;
+        }).collect(Collectors.toList());
+
+        return ResultUtils.success(orderInterfaceInfoVOS);
+    }
+
+    /**
+     * 根据接口id获取接口的所有信息（包括调用总次数）
+     *
+     * @param interfaceId
+     * @return
+     */
+    @Override
+    public BaseResponse<InterfaceInfoVO> getInterfaceAllDataByInterfaceId(Long interfaceId) {
+        InterfaceInfoVO interfaceInfoVO = userinterfaceinfoMapper.getInterfaceCountByInterfaceId(interfaceId);
+        return ResultUtils.success(interfaceInfoVO);
     }
 
 }

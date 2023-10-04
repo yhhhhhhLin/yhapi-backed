@@ -57,3 +57,21 @@ create table yhapi.userInterfaceinfo
     comment '用户接口调用次数关系表';
 
 
+create table yhapi.sdkfile
+(
+    id          bigint auto_increment comment 'id'
+        primary key,
+    userId      bigint                             not null comment '上传者id',
+    name        varchar(255)           unique      not null comment 'sdk对应文件名称',
+    description varchar(255)                       not null comment '更新介绍',
+    num         int      default 0                 not null comment '对应下载次数',
+    status      tinyint  default 1                 null comment '这个sdk是否可用 1为可用 0为不可用',
+    createTime  datetime default CURRENT_TIMESTAMP not null comment '创建时间',
+    updateTime  datetime default CURRENT_TIMESTAMP not null on update CURRENT_TIMESTAMP comment '更新时间',
+    isDelete    tinyint  default 0                 not null comment '是否删除',
+    constraint id
+        unique (id)
+)
+    comment 'sdk版本管理表';
+
+

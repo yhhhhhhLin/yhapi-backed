@@ -28,8 +28,22 @@ public interface UserinterfaceinfoService extends IService<UserInterfaceinfo> {
     Boolean isInvoke(Long interfaceInfoId, Long userId);
 
     /**
-     * 获取所有接口的调用次数
+     * 获取所有接口的调用次数前5的数据
      * @return
      */
     BaseResponse<List<InterfaceInfoVO>> analyzeInterfaceInfo();
+
+    /**
+     * 获取用户自己接口的调用次数前5的数据
+     * @param id
+     * @return
+     */
+    BaseResponse<List<InterfaceInfoVO>> analyzeSelfInterfaceInfo(Long id);
+
+    /**
+     * 根据接口id获取接口的所有信息（包括调用总次数）
+     * @param interfaceId
+     * @return
+     */
+    BaseResponse<InterfaceInfoVO> getInterfaceAllDataByInterfaceId(Long interfaceId);
 }

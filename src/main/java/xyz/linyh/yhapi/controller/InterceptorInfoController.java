@@ -1,6 +1,8 @@
 package xyz.linyh.yhapi.controller;
 
 
+import cn.hutool.core.util.StrUtil;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
@@ -55,13 +57,15 @@ public class InterceptorInfoController {
     // region 增删改查
 
     /**
-     * 创建
+     * 管理员创建对应数据接口
+     * （不需要审核）
      *
      * @param interfaceInfoAddRequest
      * @param request
      * @return
      */
     @PostMapping("/add")
+    @AuthCheck(mustRole = "admin")
     public BaseResponse<Long> addInterfaceInfo(@RequestBody InterfaceInfoAddRequest interfaceInfoAddRequest, HttpServletRequest request) {
         if (interfaceInfoAddRequest == null) {
             throw new BusinessException(ErrorCode.PARAMS_ERROR);
@@ -82,7 +86,40 @@ public class InterceptorInfoController {
     }
 
     /**
-     * 删除
+     * 更新接口数据（管理员和接口拥有者可用）
+     *
+     * @param interfaceInfoUpdateRequest
+     * @param request
+     * @return
+     */
+//    @AuthCheck(mustRole = "admin")
+    @PostMapping("/update")
+    public BaseResponse<Boolean> updateInterfaceInfo(@RequestBody InterfaceInfoUpdateRequest interfaceInfoUpdateRequest,
+                                                     HttpServletRequest request) {
+        if (interfaceInfoUpdateRequest == null || interfaceInfoUpdateRequest.getId() <= 0) {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR);
+        }
+        Interfaceinfo interfaceInfo = new Interfaceinfo();
+        BeanUtils.copyProperties(interfaceInfoUpdateRequest, interfaceInfo);
+        // 参数校验
+        interfaceinfoService.validInterfaceInfo(interfaceInfo, false);
+        User user = userService.getLoginUser(request);
+        long id = interfaceInfoUpdateRequest.getId();
+        // 判断是否存在
+        Interfaceinfo oldInterfaceInfo = interfaceinfoService.getById(id);
+        if (oldInterfaceInfo == null) {
+            throw new BusinessException(ErrorCode.NOT_FOUND_ERROR);
+        }
+        // 仅本人或管理员可修改
+        if (!oldInterfaceInfo.getUserId().equals(user.getId()) && !userService.isAdmin(request)) {
+            throw new BusinessException(ErrorCode.NO_AUTH_ERROR);
+        }
+        boolean result = interfaceinfoService.updateById(interfaceInfo);
+        return ResultUtils.success(result);
+    }
+
+    /**
+     * 删除对应id接口（管理员和接口拥有者可用）
      *
      * @param deleteRequest
      * @param request
@@ -109,39 +146,11 @@ public class InterceptorInfoController {
     }
 
     /**
-     * 更新
-     *
-     * @param interfaceInfoUpdateRequest
+     * 接口上线（管理员和接口拥有者可用）
+     * @param idRequest
      * @param request
      * @return
      */
-    @PostMapping("/update")
-    @AuthCheck(mustRole = "admin")
-    public BaseResponse<Boolean> updateInterfaceInfo(@RequestBody InterfaceInfoUpdateRequest interfaceInfoUpdateRequest,
-                                                     HttpServletRequest request) {
-        if (interfaceInfoUpdateRequest == null || interfaceInfoUpdateRequest.getId() <= 0) {
-            throw new BusinessException(ErrorCode.PARAMS_ERROR);
-        }
-        Interfaceinfo interfaceInfo = new Interfaceinfo();
-        BeanUtils.copyProperties(interfaceInfoUpdateRequest, interfaceInfo);
-        // 参数校验
-        interfaceinfoService.validInterfaceInfo(interfaceInfo, false);
-        User user = userService.getLoginUser(request);
-        long id = interfaceInfoUpdateRequest.getId();
-        // 判断是否存在
-        Interfaceinfo oldInterfaceInfo = interfaceinfoService.getById(id);
-        if (oldInterfaceInfo == null) {
-            throw new BusinessException(ErrorCode.NOT_FOUND_ERROR);
-        }
-        // 仅本人或管理员可修改
-        if (!oldInterfaceInfo.getUserId().equals(user.getId()) && !userService.isAdmin(request)) {
-            throw new BusinessException(ErrorCode.NO_AUTH_ERROR);
-        }
-        boolean result = interfaceinfoService.updateById(interfaceInfo);
-        return ResultUtils.success(result);
-    }
-
-//    接口上线
     @PostMapping("/online")
     public BaseResponse onlineInterfaceInfo(@RequestBody IdRequest idRequest,
                           HttpServletRequest request){
@@ -167,7 +176,12 @@ public class InterceptorInfoController {
         return ResultUtils.success(result);
     }
 
-//    接口下线
+    /**
+     * 接口下线（管理员和接口拥有者可用）
+     * @param idRequest
+     * @param request
+     * @return
+     */
     @PostMapping("/offline")
     public BaseResponse offlineInterfaceInfo(@RequestBody IdRequest idRequest,
                           HttpServletRequest request){
@@ -194,7 +208,7 @@ public class InterceptorInfoController {
     }
 
     /**
-     * 根据 id 获取
+     * 根据 id 获取接口详细数据
      *
      * @param id
      * @return
@@ -211,8 +225,12 @@ public class InterceptorInfoController {
     }
 
 //    先全部用管理员ak和sk发送，后面改为根据每一个用户发送
-
-
+    /**
+     * 执行对应id接口
+     * @param interfaceInfoInvokeRequest
+     * @param request
+     * @return
+     */
 //    todo 只是简单的，需要改为根据每一个请求获取请求参数，然后传递
     @PostMapping("/invoke")
     public String invokeInterfaceById(@RequestBody InterfaceInfoInvokeRequest interfaceInfoInvokeRequest,
@@ -301,7 +319,7 @@ public class InterceptorInfoController {
     }
 
     /**
-     * 分页获取列表
+     * 分页获取所有接口列表
      *
      * @param interfaceInfoQueryRequest
      * @param request
@@ -332,6 +350,64 @@ public class InterceptorInfoController {
         Page<Interfaceinfo> interfaceInfoPage = interfaceinfoService.page(new Page<>(current, size), queryWrapper);
         return ResultUtils.success(interfaceInfoPage);
     }
+
+    /**
+     * 用户获取分页自己的所有接口
+     * 条件查询名称 方法 uri 状态
+     * @return
+     */
+    @PostMapping("/self")
+    public BaseResponse getSelfInterfaceInfo(@RequestBody InterfaceInfoQueryRequest interfaceInfoQueryRequest,HttpServletRequest request){
+        if(interfaceInfoQueryRequest==null || interfaceInfoQueryRequest.getPageSize()==0L || interfaceInfoQueryRequest.getCurrent()==0L){
+            return ResultUtils.error(ErrorCode.PARAMS_ERROR,"查询参数不能为空");
+        }
+
+        User user = userService.getLoginUser(request);
+        if(user==null){
+            return ResultUtils.error(ErrorCode.NO_AUTH_ERROR,"用户不能没有登录");
+        }
+
+        LambdaQueryWrapper<Interfaceinfo> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(Interfaceinfo::getUserId,user.getId())
+                .eq(!StrUtil.isBlank(interfaceInfoQueryRequest.getMethod()),Interfaceinfo::getMethod,interfaceInfoQueryRequest.getMethod())
+                .eq(interfaceInfoQueryRequest.getStatus()!=null,Interfaceinfo::getStatus,interfaceInfoQueryRequest.getStatus())
+                .like(!StrUtil.isBlank(interfaceInfoQueryRequest.getName()),Interfaceinfo::getName,interfaceInfoQueryRequest.getName())
+                .like(!StrUtil.isBlank(interfaceInfoQueryRequest.getUri()),Interfaceinfo::getUri,interfaceInfoQueryRequest.getUri());
+        Page<Interfaceinfo> page = new Page<>(interfaceInfoQueryRequest.getCurrent(),interfaceInfoQueryRequest.getPageSize());
+        Page<Interfaceinfo> interfaceInfoPage = interfaceinfoService.page(page, wrapper);
+
+        return ResultUtils.success(interfaceInfoPage);
+    }
+
+    /**
+     * 普通用户创建对应数据接口
+     * （要审核）
+     *
+     * @param interfaceInfoAddRequest
+     * @param request
+     * @return
+     */
+    @PostMapping("/useradd")
+    public BaseResponse<Long> addInterfaceInfoByUser(@RequestBody InterfaceInfoAddRequest interfaceInfoAddRequest, HttpServletRequest request) {
+        if (interfaceInfoAddRequest == null) {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR);
+        }
+        Interfaceinfo interfaceInfo = new Interfaceinfo();
+        interfaceInfo.setStatus(0);
+        BeanUtils.copyProperties(interfaceInfoAddRequest, interfaceInfo);
+        // 校验参数是否正确
+        interfaceinfoService.validInterfaceInfo(interfaceInfo, true);
+        User loginUser = userService.getLoginUser(request);
+        interfaceInfo.setUserId(loginUser.getId());
+//        保存到待审审核的地方 todo
+//        boolean result = interfaceinfoService.save(interfaceInfo);
+        if (!true) {
+            throw new BusinessException(ErrorCode.OPERATION_ERROR);
+        }
+        long newInterfaceInfoId = interfaceInfo.getId();
+        return ResultUtils.success(newInterfaceInfoId);
+    }
+
 
     // endregion
 

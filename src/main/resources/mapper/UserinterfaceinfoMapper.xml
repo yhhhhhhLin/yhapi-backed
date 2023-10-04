@@ -23,4 +23,15 @@
     </sql>
     <select id="getInterfaceCount" resultType="xyz.linyh.yhapi.ducommon.model.entity.UserInterfaceinfo">
         select interfaceId,sum(allNum) as allNum from userInterfaceInfo  group by interfaceId  order by allNum desc limit #{limit}    </select>
+
+    <select id="getSelfInterfaceCount" resultType="xyz.linyh.yhapi.ducommon.model.entity.UserInterfaceinfo">
+        select interfaceId,sum(allNum) as allNum from userInterfaceInfo  where userId=#{id} group by interfaceId  order by allNum desc limit #{limit}
+    </select>
+
+    <select id="getInterfaceCountByInterfaceId" resultType="xyz.linyh.yhapi.ducommon.model.vo.InterfaceInfoVO">
+        select i.*,si.allNum from interfaceinfo i ,
+        (select interfaceId,sum(allNum) as allNum from userInterfaceInfo  where interfaceId=#{interfaceId} group by interfaceId ) as si
+        where i.id=#{interfaceId}
+    </select>
+
 </mapper>

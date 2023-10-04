@@ -3,6 +3,7 @@ package xyz.linyh.yhapi.service;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
+import xyz.linyh.yhapi.MyApplication;
 import xyz.linyh.yhapi.ducommon.model.entity.User;
 
 import javax.annotation.Resource;
@@ -12,7 +13,7 @@ import javax.annotation.Resource;
  *
  *
  */
-@SpringBootTest
+@SpringBootTest(classes = MyApplication.class)
 class UserServiceTest {
 
     @Resource
@@ -78,4 +79,5 @@ class UserServiceTest {
 
         }
     }
+
 }
