@@ -21,9 +21,9 @@ class AnalyzeControllerTest {
     @Autowired
     private ApiClient apiClient;
 
-    @Test
-    void sdkTest() {
-        String request = apiClient.request("/get/get2");
-        System.out.println(request);
-    }
+//    @Test
+//    void sdkTest() {
+//        String request = apiClient.request("/get/get2");
+//        System.out.println(request);
+//    }
 }

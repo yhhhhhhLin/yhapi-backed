@@ -46,4 +46,22 @@ public interface UserinterfaceinfoService extends IService<UserInterfaceinfo> {
      * @return
      */
     BaseResponse<InterfaceInfoVO> getInterfaceAllDataByInterfaceId(Long interfaceId);
+
+
+    /**
+     * 增加某个的接口调用总数
+     * @param interfaceId
+     * @param userId
+     * @param count
+     * @return
+     */
+    Boolean addCountIfNo(Long interfaceId, Long userId, Integer count);
+
+    /**
+     * 获取接口详细信息，对应用户剩下多少调用次数
+     * @param userId
+     * @param interfaceId
+     * @return
+     */
+    InterfaceInfoVO getInterfaceWithRemNumByInterfaceId(Long userId, Long interfaceId);
 }

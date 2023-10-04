@@ -8,6 +8,8 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.dubbo.config.annotation.DubboService;
 import org.springframework.beans.BeanUtils;
+import org.springframework.beans.factory.annotation.Autowired;
+import xyz.linyh.yhapi.annotation.AuthCheck;
 import xyz.linyh.yhapi.ducommon.common.BaseResponse;
 import xyz.linyh.yhapi.ducommon.common.ErrorCode;
 import xyz.linyh.yhapi.ducommon.common.ResultUtils;
@@ -121,14 +123,14 @@ public class UserinterfaceinfoServiceImpl extends ServiceImpl<UserinterfaceinfoM
 
         UserInterfaceinfo userInterfaceinfo = this.getOne(wrapper);
         if(userInterfaceinfo==null){
-            throw new BusinessException(ErrorCode.PARAMS_ERROR);
+            throw new BusinessException(ErrorCode.NO_AUTH_ERROR,"您没有调用次数，请先获取调用次数");
         }
 
         Integer remNum = userInterfaceinfo.getRemNum();
         Integer status = userInterfaceinfo.getStatus();
         if(remNum<=0 || !status.equals(UserInterfaceInfoConstant.CAN_USE)){
             log.info("{}没有次数或无法调用这个{}接口",userId,interfaceInfoId);
-            return false;
+            throw new BusinessException(ErrorCode.NO_AUTH_ERROR,"您没有调用次数，请先获取调用次数");
         }
         return true;
     }
@@ -206,6 +208,44 @@ public class UserinterfaceinfoServiceImpl extends ServiceImpl<UserinterfaceinfoM
     public BaseResponse<InterfaceInfoVO> getInterfaceAllDataByInterfaceId(Long interfaceId) {
         InterfaceInfoVO interfaceInfoVO = userinterfaceinfoMapper.getInterfaceCountByInterfaceId(interfaceId);
         return ResultUtils.success(interfaceInfoVO);
+    }
+
+
+    /**
+     * 对应用户没有相关接口的调用次数，创建对应一条数据
+     *
+     * @param interfaceId
+     * @param userId
+     * @param count
+     * @return
+     */
+    @Override
+    public Boolean addCountIfNo(Long interfaceId, Long userId, Integer count) {
+        if(interfaceId==null || userId==null || count==null){
+            throw new BusinessException(ErrorCode.PARAMS_ERROR,"增加次数相关参数不能为可能");
+        }
+
+        UserInterfaceinfo userInterfaceinfo = new UserInterfaceinfo();
+        userInterfaceinfo.setUserId(userId);
+        userInterfaceinfo.setInterfaceId(interfaceId);
+        userInterfaceinfo.setRemNum(count);
+
+        boolean save = this.save(userInterfaceinfo);
+        return null;
+    }
+
+    /**
+     * 获取接口详细信息，对应用户剩下多少调用次数
+     *
+     * @param userId
+     * @param interfaceId
+     * @return
+     */
+    @Override
+    public InterfaceInfoVO getInterfaceWithRemNumByInterfaceId(Long userId, Long interfaceId) {
+
+        InterfaceInfoVO userinterfaceinfo = userinterfaceinfoMapper.getInterfaceCountByInterfaceId(interfaceId);
+        return userinterfaceinfo;
     }
 
 }

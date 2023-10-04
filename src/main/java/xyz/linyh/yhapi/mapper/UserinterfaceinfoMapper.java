@@ -35,7 +35,15 @@ public interface UserinterfaceinfoMapper extends BaseMapper<UserInterfaceinfo> {
      * 根据接口id获取一个接口的所有信息
      * @param interfaceId
      */
-    InterfaceInfoVO getInterfaceCountByInterfaceId(Long interfaceId);
+    InterfaceInfoVO getInterfaceCountByInterfaceId(@Param("interfaceId") Long interfaceId);
+
+    /**
+     * 根据接口id和用户id获取接口详细信息和用户对应这个接口还有多少剩余次数
+     * @param interfaceId
+     * @param userId
+     * @return
+     */
+    InterfaceInfoVO getInterfaceCountByInterfaceIdAndUserId(@Param("interfaceId") Long interfaceId,@Param("userId") Long userId);
 }
 
 

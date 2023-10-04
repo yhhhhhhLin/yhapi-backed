@@ -34,4 +34,9 @@
         where i.id=#{interfaceId}
     </select>
 
+    <select id="getInterfaceCountByInterfaceIdAndUserId"
+            resultType="xyz.linyh.yhapi.ducommon.model.vo.InterfaceInfoVO">
+        select i.*,ui.remNum from interfaceinfo i ,userinterfaceinfo ui where i.id=#{interfaceId} and ui.interfaceId=#{interfaceId} and ui.userId=#{userId}
+    </select>
+
 </mapper>

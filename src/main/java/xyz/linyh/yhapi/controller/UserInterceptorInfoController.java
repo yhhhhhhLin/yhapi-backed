@@ -2,6 +2,7 @@ package xyz.linyh.yhapi.controller;
 
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -210,13 +211,52 @@ public class UserInterceptorInfoController {
      * 获取一个接口的详细信息，包括调用次数
      * @return
      */
-    @GetMapping("/detail")
+    @GetMapping("/detailwithtotal")
     public BaseResponse<InterfaceInfoVO> getInterfaceAllDataByInterfaceId(HttpServletRequest request, Long interfaceId){
         if(interfaceId==null){
             return ResultUtils.error(ErrorCode.PARAMS_ERROR,"接口id不能为空");
         }
 
        return userInterfaceinfoService.getInterfaceAllDataByInterfaceId(interfaceId);
+    }
+
+    @GetMapping("detailwithremnum")
+    public BaseResponse<InterfaceInfoVO> getInterfaceByInterfaceIdAndUserId(Long interfaceId,HttpServletRequest request){
+        if(interfaceId==null){
+            return ResultUtils.error(ErrorCode.PARAMS_ERROR,"接口id不能为空");
+        }
+
+        User user = userService.getLoginUser(request);
+        if(user==null){
+            return ResultUtils.error(ErrorCode.NOT_LOGIN_ERROR);
+        }
+
+        InterfaceInfoVO userInterfaceInfo = userInterfaceinfoService.getInterfaceWithRemNumByInterfaceId(user.getId(), interfaceId);
+        return ResultUtils.success(userInterfaceInfo);
+    }
+
+
+
+    @GetMapping("/experience")
+    public BaseResponse<UserInterfaceinfo> getExperienceCount(HttpServletRequest request, Long id){
+        if(id==null){
+            return ResultUtils.error(ErrorCode.PARAMS_ERROR,"接口id不能为空");
+        }
+
+//        获取用户
+        User user = userService.getLoginUser(request);
+        if(user==null){
+            return ResultUtils.error(ErrorCode.NOT_LOGIN_ERROR);
+        }
+//        判断是否是首次体验
+        UserInterfaceinfo userInterfaceinfo = userInterfaceinfoService.getOne(Wrappers.<UserInterfaceinfo>lambdaQuery().eq(UserInterfaceinfo::getUserId, user.getId()).eq(UserInterfaceinfo::getInterfaceId, id));
+        if(userInterfaceinfo!=null){
+            return ResultUtils.error(ErrorCode.NO_AUTH_ERROR,"无法重复获取次数");
+        }
+//        增加调用次数
+        Boolean isSave = userInterfaceinfoService.addCountIfNo(id, user.getId(), 10);
+        userInterfaceinfo = userInterfaceinfoService.getOne(Wrappers.<UserInterfaceinfo>lambdaQuery().eq(UserInterfaceinfo::getUserId, user.getId()).eq(UserInterfaceinfo::getInterfaceId, id));
+        return ResultUtils.success(userInterfaceinfo);
     }
 
 }
