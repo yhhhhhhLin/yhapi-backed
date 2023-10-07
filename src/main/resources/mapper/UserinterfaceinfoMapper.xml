@@ -22,21 +22,25 @@
         createTime,updateTime,isDelete
     </sql>
     <select id="getInterfaceCount" resultType="xyz.linyh.yhapi.ducommon.model.entity.UserInterfaceinfo">
-        select interfaceId,sum(allNum) as allNum from userInterfaceInfo  group by interfaceId  order by allNum desc limit #{limit}    </select>
+        select interfaceId,sum(allNum) as allNum from userInterfaceinfo  group by interfaceId  order by allNum desc limit #{limit}    </select>
 
-    <select id="getSelfInterfaceCount" resultType="xyz.linyh.yhapi.ducommon.model.entity.UserInterfaceinfo">
-        select interfaceId,sum(allNum) as allNum from userInterfaceInfo  where userId=#{id} group by interfaceId  order by allNum desc limit #{limit}
-    </select>
+    <select id="getSelfInterfaceCount" resultType="xyz.linyh.yhapi.ducommon.model.vo.InterfaceInfoVO">
+--         找出这个某个用户的所有接口
+    select tt.id,tt.name,tt.method,tt.requestParams,tt.getRequestParams,tt.description,tt.uri,tt.host,tt.userId,t.allNum
+    from (select interfaceId,sum(allNum) as allNum from userInterfaceinfo where isDelete = 0 group by  interfaceId)  t join
+             (select * from interfaceInfo  where userId = #{id} and isDelete = 0)  tt
+    where t.interfaceId = tt.id order by t.allNum desc limit #{limit}
+        </select>
 
     <select id="getInterfaceCountByInterfaceId" resultType="xyz.linyh.yhapi.ducommon.model.vo.InterfaceInfoVO">
-        select i.*,si.allNum from interfaceinfo i ,
-        (select interfaceId,sum(allNum) as allNum from userInterfaceInfo  where interfaceId=#{interfaceId} group by interfaceId ) as si
-        where i.id=#{interfaceId}
+        select i.*,(select SUM(allNum) from userInterfaceinfo WHERE interfaceId = #{interfaceId} GROUP BY interfaceId) as allNum
+        from interfaceInfo i
+        where i.id = #{interfaceId};
     </select>
 
     <select id="getInterfaceCountByInterfaceIdAndUserId"
             resultType="xyz.linyh.yhapi.ducommon.model.vo.InterfaceInfoVO">
-        select i.*,ui.remNum from interfaceinfo i ,userinterfaceinfo ui where i.id=#{interfaceId} and ui.interfaceId=#{interfaceId} and ui.userId=#{userId}
+        select i.*,ui.remNum from interfaceInfo i userInterfaceInfo ui where i.id=#{interfaceId} and ui.interfaceId=#{interfaceId} and ui.userId=#{userId}
     </select>
 
 </mapper>

@@ -29,7 +29,7 @@ public interface UserinterfaceinfoMapper extends BaseMapper<UserInterfaceinfo> {
      * @param id
      * @return
      */
-    public List<UserInterfaceinfo> getSelfInterfaceCount(@Param("limit") Integer limit,@Param("id")Long id);
+    public List<InterfaceInfoVO> getSelfInterfaceCount(@Param("limit") Integer limit,@Param("id")Long id);
 
     /**
      * 根据接口id获取一个接口的所有信息

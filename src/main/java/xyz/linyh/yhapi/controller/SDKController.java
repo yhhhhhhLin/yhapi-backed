@@ -59,7 +59,7 @@ public class SDKController {
     @Autowired
     private UserService userService;
 
-    private String SDK_DIR_PRE = "F:\\SdkFile\\";
+    private String SDK_DIR_PRE = "/usr/share/apiProject/";
     @PostMapping("/upload")
     @AuthCheck(mustRole="admin")
     @ResponseBody

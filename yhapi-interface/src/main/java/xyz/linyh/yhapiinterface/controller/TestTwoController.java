@@ -11,6 +11,11 @@ public class TestTwoController {
         return "ok";
     }
 
+    @RequestMapping(value = "/interface/get/get")
+    public String test5(){
+        return "ok";
+    }
+
     @RequestMapping
     public String test3(){
         return "not ok";

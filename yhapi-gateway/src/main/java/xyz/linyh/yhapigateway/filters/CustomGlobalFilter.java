@@ -25,6 +25,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+import xyz.linyh.yhapigateway.service.Impl.RouteServiceImpl;
 import xyz.linyh.yhapigateway.utils.RedissonLockUtil;
 import xyz.linyh.yhapi.ducommon.common.ErrorCode;
 import xyz.linyh.yhapi.ducommon.exception.BusinessException;
@@ -33,13 +34,16 @@ import xyz.linyh.yhapi.ducommon.model.entity.User;
 import xyz.linyh.yhapi.ducommon.service.DubboInterfaceinfoService;
 import xyz.linyh.yhapi.ducommon.service.DubboUserService;
 import xyz.linyh.yhapi.ducommon.service.DubboUserinterfaceinfoService;
+import xyz.linyh.yhapigateway.utils.ToJsonUtils;
 import xyz.linyh.yhapiinterfaceclientsdk.utils.MyDigestUtils;
 
 
+import javax.annotation.Resource;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import static org.springframework.cloud.gateway.support.ServerWebExchangeUtils.GATEWAY_ROUTE_ATTR;
 import static org.springframework.cloud.gateway.support.ServerWebExchangeUtils.ORIGINAL_RESPONSE_CONTENT_TYPE_ATTR;
@@ -58,8 +62,9 @@ public class CustomGlobalFilter implements GlobalFilter, Ordered {
     @DubboReference
     private DubboInterfaceinfoService dubboInterfaceinfoService;
 
-    // todo 不能用固定的
-//    public static final String INTERFACE_PRE = "http://101.37.167.58:7600";
+    @Resource
+    private RouteServiceImpl routeServiceImpl;;
+
 
     @Override
     public Mono<Void> filter(ServerWebExchange exchange, GatewayFilterChain chain) {
@@ -68,13 +73,10 @@ public class CustomGlobalFilter implements GlobalFilter, Ordered {
 
 //        3. 统一日志
         ServerHttpRequest request = exchange.getRequest();
-        /**
-         * todo 网关启动的时候，从数据库获取所有interfaceinfo信息,维护到内存hashmap中，获取到所有要转发到的地址，然后根据方法的path获取到这个方法要转发到哪个服务，不可以直接在yml中写死要转发的地址
-         */
+
         HttpHeaders headers = request.getHeaders();
         String uri = headers.getFirst("uri");
 
-//        String path = request.getPath().value()+uri;
         String path = request.getPath().value();
         String method = request.getMethod().toString();
 
@@ -83,6 +85,7 @@ public class CustomGlobalFilter implements GlobalFilter, Ordered {
         log.info("请求方法:{}",request.getMethod());
         log.info("请求用户地址:{}",request.getRemoteAddress());
         log.info("请求体:{}",request.getBody());
+
 
 //        4. todo 设置请求黑白名单
 
@@ -116,80 +119,33 @@ public class CustomGlobalFilter implements GlobalFilter, Ordered {
         }
 
 //        获取所有接口
-        HashMap<String, String> URIAndHost = new HashMap<>();
-        List<Interfaceinfo> interfaceinfos = null;
+        Map<String, Interfaceinfo> URIAndInterface = routeServiceImpl.getRoutes();
 
-
-        interfaceinfos = dubboInterfaceinfoService.getAllInterface();
-        if(interfaceinfos==null) {
+        if(URIAndInterface==null || URIAndInterface.size()<=0) {
             throw new BusinessException(ErrorCode.SYSTEM_ERROR);
         }
 
-
-//        全部添加到hashmap中
-        interfaceinfos.forEach(interfaceinfo->{
-            URIAndHost.put(interfaceinfo.getUri(),interfaceinfo.getHost());
-        });
-
 //        6. 判断请求接口是否存在
-//        String host = URIAndHost.get(uri);
-//        if(host==null){
-//            throw new BusinessException(ErrorCode.PARAMS_ERROR);
-//        }
+        Interfaceinfo mapInterface = URIAndInterface.get(uri);
 
-//        Long interfaceId =getInterfaceId(interfaceinfos,uri);
-        Interfaceinfo interfaceinfo = null;
-        for(int i = 0;i<interfaceinfos.size();i++){
-            if(uri!=null && uri.equals(interfaceinfos.get(i).getUri())){
-                interfaceinfo = interfaceinfos.get(i);
-            }
-        }
-        if(interfaceinfo == null){
+        if(mapInterface==null){
             throw new BusinessException(ErrorCode.PARAMS_ERROR,"无法获取接口");
         }
-
-
-//        路由地址
-        Route route = exchange.getAttribute(GATEWAY_ROUTE_ATTR);
-        System.out.println(route);
-
-//        跳转到特定的地址 todo
-//        log.info(String.valueOf(URI.create(host + uri)));
-//        exchange = exchange.mutate()
-//                .request(exchange.getRequest().mutate().uri(URI.create(host + uri)).build())
-//                .build();
-
 
 
 //         todo 判断是否还有调用次数 因为可以直接通过sdk调用方法，可以绕过前面的backed
 
 
-
 //        7. 转发到对应的接口
         Mono<Void> filter = chain.filter(exchange);
 
-        return handleResponse(exchange,chain,interfaceinfo,user);
+        return handleResponse(exchange,chain,mapInterface,user);
 //        这个是异步的方法，需要全部过滤都结束才会转发到对应的服务上 所以无法通过filter来获取响应结果
 
-//        return filter;
+
     }
 
-    /**
-     * 根据uri获取interfaceId
-     * @param interfaceinfos
-     * @param uri
-     * @return
-     */
-    private Long getInterfaceId(List<Interfaceinfo> interfaceinfos, String uri) {
 
-
-        for(int i = 0;i<interfaceinfos.size();i++){
-            if(interfaceinfos.get(i).getUri().equals(uri)){
-                return interfaceinfos.get(i).getId();
-            }
-        }
-        return null;
-    }
 
 
     @Autowired

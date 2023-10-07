@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.plugins.pagination.PageDTO;
+import org.springframework.scheduling.annotation.Async;
 import xyz.linyh.yhapi.annotation.AuthCheck;
 import xyz.linyh.yhapi.ducommon.common.BaseResponse;
 import xyz.linyh.yhapi.ducommon.common.DeleteRequest;
@@ -50,7 +51,6 @@ public class UserController {
         if (userRegisterRequest == null) {
             throw new BusinessException(ErrorCode.PARAMS_ERROR);
         }
-//        todo 添加ak和sk
         String userAccount = userRegisterRequest.getUserAccount();
         String userPassword = userRegisterRequest.getUserPassword();
         String checkPassword = userRegisterRequest.getCheckPassword();
@@ -58,6 +58,7 @@ public class UserController {
             return null;
         }
         long result = userService.userRegister(userAccount, userPassword, checkPassword);
+        updateAK(result);
         return ResultUtils.success(result);
     }
 
@@ -217,6 +218,7 @@ public class UserController {
      * @return
      */
     @GetMapping("/updateak")
+    @Async
     public BaseResponse updateAK(Long id) {
         LambdaUpdateWrapper<User> wrapper = new LambdaUpdateWrapper<>();
         if (id <= 0) {

@@ -71,7 +71,7 @@ public class InterceptorInfoController {
             throw new BusinessException(ErrorCode.PARAMS_ERROR);
         }
         Interfaceinfo interfaceInfo = new Interfaceinfo();
-        interfaceInfo.setStatus(0);
+        interfaceInfo.setStatus(1);
         BeanUtils.copyProperties(interfaceInfoAddRequest, interfaceInfo);
         // 校验参数是否正确
         interfaceinfoService.validInterfaceInfo(interfaceInfo, true);

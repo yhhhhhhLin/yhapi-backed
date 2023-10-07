@@ -4,3 +4,4 @@ spring:
     url: jdbc:mysql://localhost:3306/yhapi
     username: yhapi
     password: abcDe8909389.
+

@@ -8,6 +8,7 @@ import cn.hutool.crypto.digest.Digester;
 import cn.hutool.http.HttpRequest;
 import org.springframework.web.bind.annotation.*;
 import xyz.linyh.yhapiinterface.MyDigestUtils;
+import xyz.linyh.yhapiinterface.entitys.ThisUser;
 //import xyz.linyh.yhapiinterface.MyDigestUtils;
 
 import javax.servlet.http.HttpServletRequest;
@@ -29,7 +30,7 @@ public class TestInterfaceController {
 
 //    包含认证签名过程
     @GetMapping("/g")
-    public String testGet(@RequestParam(required = false) String name,
+    public String testGet(@RequestParam String name,
                           HttpServletRequest request, HttpServletResponse response){
         String result = "Get "+name;
 
@@ -52,11 +53,16 @@ public class TestInterfaceController {
         return result;
     }
 
-    @GetMapping("/p")
-    public String testPost(@RequestBody String name){
-        String result = "POST "+name;
+
+
+    @PostMapping("/p")
+    public String testPost(@RequestBody ThisUser thisUser){
+        if(thisUser==null){
+            return "null";
+        }
+        String result = "POST "+ thisUser.getName();
         System.out.println(result);
-        return result;
+        return "名字:"+thisUser.getName()+",年龄:"+thisUser.getAge();
     }
 //
 //    @GetMapping("/")

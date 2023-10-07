@@ -31,6 +31,12 @@
             <scope>test</scope>
         </dependency>
 
+        <dependency>
+            <groupId>cn.hutool</groupId>
+            <artifactId>hutool-all</artifactId>
+            <version>5.8.16</version>
+        </dependency>
+
 <!--        <dependency>-->
 <!--            <groupId>xyz.linyh</groupId>-->
 <!--            <artifactId>yhapi-interface-client-sdk</artifactId>-->

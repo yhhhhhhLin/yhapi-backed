@@ -12,14 +12,15 @@ spring:
       routes:
 #      路由
         - id: api_route
-#          uri:
 #          uri: http://101.37.167.58:7600
+#          无所谓的请求地址
           uri: http://localhost:7600
           predicates:
             - Path=/interface/**
-#          把前缀去掉
+#          把前缀去掉,执行自定义过滤器，根据定义顺序执行
           filters:
             - StripPrefix= 1
+            - UriHostPlaceholderFilter=10001
 
 
 #开启网关日志

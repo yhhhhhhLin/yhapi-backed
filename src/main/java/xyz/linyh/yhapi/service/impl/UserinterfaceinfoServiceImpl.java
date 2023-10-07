@@ -178,24 +178,24 @@ public class UserinterfaceinfoServiceImpl extends ServiceImpl<UserinterfaceinfoM
     @Override
     public BaseResponse<List<InterfaceInfoVO>> analyzeSelfInterfaceInfo(Long id) {
 //        获取每一个接口对应的总调用次数
-        List<UserInterfaceinfo> interfaceCount = userinterfaceinfoMapper.getSelfInterfaceCount(5,id);
-        if(interfaceCount==null || interfaceCount.size()==0){
-            ResultUtils.success("无数据");
-        }
+        List<InterfaceInfoVO> interfaceCount = userinterfaceinfoMapper.getSelfInterfaceCount(5,id);
 
-//        根据interfaceinfoId一个一个去查对应的接口详细信息
-        List<InterfaceInfoVO> orderInterfaceInfoVOS = interfaceCount.stream().map(userInterfaceInfo  -> {
+        return ResultUtils.success(interfaceCount);
 
-            InterfaceInfoVO interfaceInfoVO = new InterfaceInfoVO();
-            BeanUtils.copyProperties(userInterfaceInfo, interfaceInfoVO);
-            Long interfaceId = userInterfaceInfo.getInterfaceId();
-            Interfaceinfo interfaceinfo = interfaceinfoService.getById(interfaceId);
-            BeanUtils.copyProperties(interfaceinfo,interfaceInfoVO);
 
-            return interfaceInfoVO;
-        }).collect(Collectors.toList());
-
-        return ResultUtils.success(orderInterfaceInfoVOS);
+////        根据interfaceinfoId一个一个去查对应的接口详细信息
+//        List<InterfaceInfoVO> orderInterfaceInfoVOS = interfaceCount.stream().map(userInterfaceInfo  -> {
+//
+//            InterfaceInfoVO interfaceInfoVO = new InterfaceInfoVO();
+//            BeanUtils.copyProperties(userInterfaceInfo, interfaceInfoVO);
+//            Long interfaceId = userInterfaceInfo.getInterfaceId();
+//            Interfaceinfo interfaceinfo = interfaceinfoService.getById(interfaceId);
+//            BeanUtils.copyProperties(interfaceinfo,interfaceInfoVO);
+//
+//            return interfaceInfoVO;
+//        }).collect(Collectors.toList());
+//
+//        return ResultUtils.success(orderInterfaceInfoVOS);
     }
 
     /**
