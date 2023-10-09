@@ -9,7 +9,7 @@ on:
 #具体要执行的任务内容
 jobs:
   build:
-    runs-on: ubuntu-20.04.2
+    runs-on: ubuntu-latest
 
 #    具体执行步骤
     steps:
