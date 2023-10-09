@@ -11,7 +11,7 @@ jobs:
   build:
     runs-on: ubuntu-latest
 
-#    具体执行步骤
+    #    具体执行步骤
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v2
@@ -22,22 +22,22 @@ jobs:
           distribution: 'adopt'
           java-version: '8'
 
-#      利用maven构建
+      #      利用maven构建
       - name: Build with Maven
         run: |
           ./mvnw clean install
 
-#      构建docker
+      #      构建docker
       - name: Build Docker image
         run: |
           docker build -t 1583427850/yh-api:latest .
 
-#      登录docker
+      #      登录docker
       - name: Log in to Docker Hub
         run: |
           echo ${{ secrets.DOCKER_PASSWORD }} | docker login -u ${{ secrets.DOCKER_USERNAME }} --password-stdin
 
-#      上传到docker
+      #      上传到docker
       - name: Push Docker image to Docker Hub
         run: |
           docker push 1583427850/yh-api:latest
