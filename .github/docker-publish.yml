@@ -1,0 +1,43 @@
+name: Build and Publish Backed Docker Image
+
+#这个任务执行条件
+on:
+  push:
+    branches:
+      - main
+
+#具体要执行的任务内容
+jobs:
+  build:
+    runs-on: ubuntu-20.04.2
+
+#    具体执行步骤
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v2
+
+      - name: Set up JDK 8
+        uses: actions/setup-java@v2
+        with:
+          distribution: 'adopt'
+          java-version: '8'
+
+#      利用maven构建
+      - name: Build with Maven
+        run: |
+          ./mvnw clean install
+
+#      构建docker
+      - name: Build Docker image
+        run: |
+          docker build -t 1583427850/yh-api:latest .
+
+#      登录docker
+      - name: Log in to Docker Hub
+        run: |
+          echo ${{ secrets.DOCKER_PASSWORD }} | docker login -u ${{ secrets.DOCKER_USERNAME }} --password-stdin
+
+#      上传到docker
+      - name: Push Docker image to Docker Hub
+        run: |
+          docker push 1583427850/yh-api:latest
