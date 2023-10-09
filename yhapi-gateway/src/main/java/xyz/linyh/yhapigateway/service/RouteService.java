@@ -31,26 +31,7 @@ public interface RouteService {
      * @param serverRequest
      * @return
      */
-    Mono<ServerResponse> save(ServerRequest serverRequest);
+    Mono<ServerResponse> updateInterfaceCache(ServerRequest serverRequest);
 
-    /**
-     * 查询所有路由
-     * @param serverRequest
-     * @return
-     */
-    Mono<ServerResponse> queryAll(ServerRequest serverRequest);
 
-    /**
-     * 查询某个路由
-     * @param serverRequest
-     * @return
-     */
-    Mono<ServerResponse> queryOne(ServerRequest serverRequest);
-
-    /**
-     * 删除某个路由
-     * @param serverRequest
-     * @return
-     */
-    Mono<ServerResponse> delete(ServerRequest serverRequest);
 }

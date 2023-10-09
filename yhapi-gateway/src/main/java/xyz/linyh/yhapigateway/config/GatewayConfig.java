@@ -43,11 +43,11 @@ public class GatewayConfig {
     @Bean
     public RouterFunction<ServerResponse> gwRoute() {
         return RouterFunctions
-                .route(POST("/yhapi/routes").and(accept(APPLICATION_JSON)), routeService::save)
-                .andRoute(GET("/yhapi/routes").and(accept(APPLICATION_JSON)), routeService::queryAll)
-                .andRoute(GET("/yhapi/routes/{routeId}").and(accept(APPLICATION_JSON)), routeService::queryOne)
-                .andRoute(DELETE("/yhapi/routes/{routeId}").and(accept(APPLICATION_JSON)), routeService::delete)
-//                .andRoute(GET("/gw-mgr/routes-all").and(accept(APPLICATION_JSON)), routeService::queryALL)
+                .route(GET("/yhapi/routes").and(accept(APPLICATION_JSON)), routeService::updateInterfaceCache)
+//                .andRoute(GET("/yhapi/routes").and(accept(APPLICATION_JSON)), routeService::queryAll)
+//                .andRoute(GET("/yhapi/routes/{routeId}").and(accept(APPLICATION_JSON)), routeService::queryOne)
+//                .andRoute(DELETE("/yhapi/routes/{routeId}").and(accept(APPLICATION_JSON)), routeService::delete)
+////                .andRoute(GET("/gw-mgr/routes-all").and(accept(APPLICATION_JSON)), routeService::queryALL)
                 ;
     }
 

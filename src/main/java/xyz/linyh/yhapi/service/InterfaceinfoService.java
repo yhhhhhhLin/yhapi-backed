@@ -19,4 +19,12 @@ public interface InterfaceinfoService extends IService<Interfaceinfo> {
     void validInterfaceInfo(Interfaceinfo interfaceInfo, boolean add);
 
     Interfaceinfo getInterfaceInfoByURI(String interfaceURI,String method);
+
+    /**
+     * 刷新gateway中缓存的接口数据
+     * @param
+     * @param
+     * @return
+     */
+    Boolean updateGatewayCache();
 }

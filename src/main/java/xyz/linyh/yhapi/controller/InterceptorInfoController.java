@@ -82,6 +82,7 @@ public class InterceptorInfoController {
             throw new BusinessException(ErrorCode.OPERATION_ERROR);
         }
         long newInterfaceInfoId = interfaceInfo.getId();
+        Boolean aBoolean = interfaceinfoService.updateGatewayCache();
         return ResultUtils.success(newInterfaceInfoId);
     }
 
@@ -115,6 +116,8 @@ public class InterceptorInfoController {
             throw new BusinessException(ErrorCode.NO_AUTH_ERROR);
         }
         boolean result = interfaceinfoService.updateById(interfaceInfo);
+//        刷新网关接口数据
+        interfaceinfoService.updateGatewayCache();
         return ResultUtils.success(result);
     }
 
@@ -142,6 +145,8 @@ public class InterceptorInfoController {
             throw new BusinessException(ErrorCode.NO_AUTH_ERROR);
         }
         boolean b = interfaceinfoService.removeById(id);
+
+        interfaceinfoService.updateGatewayCache();
         return ResultUtils.success(b);
     }
 
@@ -173,6 +178,8 @@ public class InterceptorInfoController {
         wrapper.eq(Interfaceinfo::getId,id)
                 .set(Interfaceinfo::getStatus,1);
         boolean result = interfaceinfoService.update(wrapper);
+
+        interfaceinfoService.updateGatewayCache();
         return ResultUtils.success(result);
     }
 
@@ -204,6 +211,8 @@ public class InterceptorInfoController {
         wrapper.eq(Interfaceinfo::getId,id)
                 .set(Interfaceinfo::getStatus,0);
         boolean result = interfaceinfoService.update(wrapper);
+
+        interfaceinfoService.updateGatewayCache();
         return ResultUtils.success(result);
     }
 
@@ -405,6 +414,9 @@ public class InterceptorInfoController {
             throw new BusinessException(ErrorCode.OPERATION_ERROR);
         }
         long newInterfaceInfoId = interfaceInfo.getId();
+
+        interfaceinfoService.updateGatewayCache();
+
         return ResultUtils.success(newInterfaceInfoId);
     }
 

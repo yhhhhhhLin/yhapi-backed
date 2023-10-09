@@ -15,6 +15,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
+import static org.springframework.http.MediaType.APPLICATION_JSON;
+import static org.springframework.web.reactive.function.server.ServerResponse.ok;
+
 /**
  * 用来对数据库里面的路由进行操作
  * @author lin
@@ -58,47 +61,26 @@ public class RouteServiceImpl implements RouteService {
         return routes;
     }
 
+//    如果后端服务对路由进行修改，调用这里面的接口实现修改路由中缓存数据
     /**
-     * 新增新的路由
+     * 后端新增了接口，gateway需要重新刷新缓存中的接口
      *
      * @param serverRequest
      * @return
      */
     @Override
-    public Mono<ServerResponse> save(ServerRequest serverRequest) {
-        return null;
+    public Mono<ServerResponse> updateInterfaceCache(ServerRequest serverRequest) {
+//        刷新的缓存中的接口数据
+        log.info("刷新的缓存中的接口数据");
+        routes.clear();
+        List<Interfaceinfo> interfaceinfos = dubboInterfaceinfoService.getAllInterface();
+//        将路由信息保存到hashmap中
+        for (Interfaceinfo interfaceinfo : interfaceinfos) {
+            routes.put(String.valueOf(interfaceinfo.getUri()),interfaceinfo);
+        }
+        log.info("刷新的缓存中的接口数据成功");
+        String responseData = "{ \"key\": \"value\" }";
+        return ok().contentType(APPLICATION_JSON).body(Mono.just(responseData), String.class);
     }
 
-    /**
-     * 查询所有路由
-     *
-     * @param serverRequest
-     * @return
-     */
-    @Override
-    public Mono<ServerResponse> queryAll(ServerRequest serverRequest) {
-        return null;
-    }
-
-    /**
-     * 查询某个路由
-     *
-     * @param serverRequest
-     * @return
-     */
-    @Override
-    public Mono<ServerResponse> queryOne(ServerRequest serverRequest) {
-        return null;
-    }
-
-    /**
-     * 删除某个路由
-     *
-     * @param serverRequest
-     * @return
-     */
-    @Override
-    public Mono<ServerResponse> delete(ServerRequest serverRequest) {
-        return null;
-    }
 }

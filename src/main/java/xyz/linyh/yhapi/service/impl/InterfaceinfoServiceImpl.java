@@ -1,11 +1,16 @@
 package xyz.linyh.yhapi.service.impl;
 
+import cn.hutool.http.HttpRequest;
+import cn.hutool.http.HttpResponse;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.scheduling.annotation.Async;
 import xyz.linyh.yhapi.ducommon.common.BaseResponse;
 import xyz.linyh.yhapi.ducommon.common.ErrorCode;
 import xyz.linyh.yhapi.ducommon.common.ResultUtils;
+import xyz.linyh.yhapi.ducommon.constant.InterfaceInfoConstant;
 import xyz.linyh.yhapi.ducommon.exception.BusinessException;
 import xyz.linyh.yhapi.ducommon.model.entity.Interfaceinfo;
 import xyz.linyh.yhapi.service.InterfaceinfoService;
@@ -18,6 +23,7 @@ import org.springframework.stereotype.Service;
 * @createDate 2023-09-03 19:31:19
 */
 @Service
+@Slf4j
 public class InterfaceinfoServiceImpl extends ServiceImpl<InterfaceinfoMapper, Interfaceinfo>
     implements InterfaceinfoService{
 
@@ -67,6 +73,26 @@ public class InterfaceinfoServiceImpl extends ServiceImpl<InterfaceinfoMapper, I
                 .eq(Interfaceinfo::getMethod,method)
         );
         return interfaceinfo;
+    }
+
+    /**
+     * 刷新gateway中缓存的接口数据
+     *
+     * @param
+     * @param
+     * @return
+     */
+    @Async
+    @Override
+    public Boolean updateGatewayCache() {
+        try {
+            HttpResponse execute = HttpRequest.get(InterfaceInfoConstant.GATEWAY_PATH).execute();
+        } catch (Exception e) {
+            log.error("刷新路由接口数据失败....");
+            throw new RuntimeException(e);
+        }
+        log.info("刷新路由接口数据成功....");
+        return true;
     }
 }
 
