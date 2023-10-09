@@ -3,8 +3,9 @@ name: Build and Publish Backed Docker Image
 #这个任务执行条件1
 on:
   push:
-    branches:
-      - main
+    branches: [ "master" ]
+  pull_request:
+    branches: [ "master" ]
 
 #具体要执行的任务内容
 jobs:
