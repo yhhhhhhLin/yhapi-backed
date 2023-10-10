@@ -24,10 +24,10 @@ jobs:
           distribution: 'adopt'
           java-version: '8'
 
-      #      利用maven构建
-      - name: Build with Maven
-        run: |
-          ./mvnw clean install
+#      #      利用maven构建
+#      - name: Build with Maven
+#        run: |
+#          ./mvnw clean install
 
       #      构建docker
       - name: Build Docker image
