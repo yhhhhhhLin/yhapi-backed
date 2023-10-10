@@ -32,7 +32,7 @@ jobs:
       #      构建docker
       - name: Build Docker image
         run: |
-          docker build -t 1583427850/yh-api:latest ../../
+          docker build -t 1583427850/yh-api:latest .
 
       #      登录docker
       - name: Log in to Docker Hub
