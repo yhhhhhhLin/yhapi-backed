@@ -1,3 +1,5 @@
+create database yhapi;
+use yhapi;
 -- 用户表
 create table if not exists user
 (
